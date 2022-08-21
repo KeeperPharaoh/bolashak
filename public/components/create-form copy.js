@@ -1,14 +1,6 @@
 export default {
     template: `
-    <div v-if="isLoading" class="loader-wrapper">
-    <div  class="lds-facebook"><div></div><div></div><div></div></div>
-
-    </div>
-    <div v-else class="container">
-    <form v-if="!isStarting" @submit.prevent="startCreate">
-            <button class="btn btn-success">Начать</button>
-    </form>
-    <form v-else @submit.prevent="save" style="transition:0.5s">
+    <form @submit.prevent="save" style="transition:0.5s">
         <div class="form-group">
             <label for="exampleFormControlSelect1">Название</label>
             <input  v-model="title" type="text" class="form-control"  placeholder="Название">
@@ -28,11 +20,10 @@ export default {
             <h4 class="btn-primary" style="padding:8px" disabled>Вопросы</h4>
         </div>
 
-        <button @click.prevent.stop="addQuestion" class="btn btn-success btn-add-question " style="justify-self:flex-end">Добавить вопрос <span class="glyphicon glyphicon-plus"></span> </button>
+        <button @click.prevent.stop="addQuestion" class="btn btn-success btn-add-question " style="justify-self:flex-end"><span class="glyphicon glyphicon-plus"></span></button>
         <div v-for="(question, questionIndex) in test"
              :key="question.uuid"
               class="questoins-wrapper"
-              :class="{'is-updated':question.isUpdated}"
              >
 
             <div class="input-group">
@@ -56,9 +47,9 @@ export default {
                 </select>
             </div>
 
-            <div class="answers-wrapper"  style="margin-left:32px;">
+            <div class="answers-wrapper" style="margin-left:32px;">
 
-                <div :class="{'is-updated':answer.isUpdated}" v-for="(answer, answerIndex) in question.answers" :key="answer.uuid" class="input-group" style="margin-bottom:4px; flex-direction:column; ">
+                <div v-for="(answer, answerIndex) in question.answers" :key="answer.uuid" class="input-group" style="margin-bottom:4px; flex-direction:column; ">
                     <div class="input-group" style="width:100%;">
                        <span v-if="!question.common" class="input-group-addon">
                         <input
@@ -92,9 +83,7 @@ export default {
         <p v-if="successMessage" class="alert alert-success" v-html="successMessage"> </p>
         <p v-if="errorMessage" class="alert alert-warn" v-html="errorMessage">  </p>
 
-    </form>
-    </div>
-    `,
+    </form>`,
 
     data() {
         return {
@@ -107,7 +96,6 @@ export default {
             isLoading: false,
             isUpdate: false,
             id: null,
-            isStarting: false,
         };
     },
     computed: {
@@ -126,7 +114,6 @@ export default {
             this.getTest(pathes[2]);
             this.id = pathes[2];
             this.isUpdate = true;
-            this.isStarting = true;
         }
     },
     watch: {
@@ -138,29 +125,17 @@ export default {
         },
     },
     methods: {
-        startCreate() {
-            this.isLoading = true;
-            axios.get("/api/start-creating").then((response) => {
-                this.id = response.data.id;
-                this.isStarting = true;
-                this.isLoading = false;
-            });
-        },
         getRadioInputName(question) {
             return "commonAnswer" + question.id ? question.id : question.uuid;
         },
         getTest(id) {
-            this.isLoading = true;
             axios
                 .get(this.baseUrl + "/api/admin/test/" + id)
                 .then((response) => {
                     this.test = response.data.questions.map((q) => {
                         q.common = q.type === "common";
-                        q.isUpdated = false;
-
                         q.answers.forEach((el) => {
                             el.title = el.answer;
-                            el.isUpdated = false;
                             // el.right = true;
                         });
                         return q;
@@ -168,26 +143,18 @@ export default {
                     this.title = response.data?.title;
                     this.id = response.data?.id;
                     this.language = response.data?.language || "ru";
-                    this.isLoading = false;
                 });
         },
         addQuestion() {
-            this.isLoading = true;
-            axios.post(`/api/question/${this.id}`).then((response) => {
-                const qId = response.data.id;
-                const question = {
-                    uuid: Math.random() + new Date().getTime(),
-                    id: qId,
-                    question: "",
-                    common: true,
-                    image: null,
-                    rawImage: "",
-                    answers: [],
-                    isUpdated: true,
-                };
-                this.test.push(question);
-                this.isLoading = false;
-            });
+            const question = {
+                uuid: Math.random() + new Date().getTime(),
+                question: "",
+                common: true,
+                image: null,
+                rawImage: "",
+                answers: [],
+            };
+            this.test.push(question);
         },
 
         deleteQuestion(questionIndex) {
@@ -215,20 +182,13 @@ export default {
         },
 
         addAnswer(questionIndex) {
-            this.isLoading = true;
-            const qId = this.test[questionIndex].id;
-            axios.post(`/api/answer/${qId}`).then((response) => {
-                const answer = {
-                    uuid: Math.random() + new Date().getTime(),
-                    title: "",
-                    right: false,
-                    image: "",
-                    id: response.data.id,
-                    isUpdated: true,
-                };
-                this.test[questionIndex].answers.push(answer);
-                this.isLoading = false;
-            });
+            const answer = {
+                uuid: Math.random() + new Date().getTime(),
+                title: "",
+                right: false,
+                image: "",
+            };
+            this.test[questionIndex].answers.push(answer);
         },
 
         deleteAnswer(questionIndex, answerIndex) {
@@ -258,16 +218,13 @@ export default {
         },
 
         selectQuestionType(event, questionIndex) {
-            this.test[questionIndex].isUpdated = true;
             this.test[questionIndex].common = event.target.value === "common";
             console.log(event, questionIndex, this.test[questionIndex]);
         },
         setQuestion({ target }, questionIndex) {
             this.test[questionIndex].question = target.value;
-            this.test[questionIndex].isUpdated = true;
         },
         setQuestionRawImage({ target }, questionIndex) {
-            this.test[questionIndex].isUpdated = true;
             const fileReader = new FileReader();
             fileReader.onload = () => {
                 const base64 = fileReader.result;
@@ -278,7 +235,6 @@ export default {
             fileReader.readAsDataURL(target.files[0]);
         },
         setAnswerRawImage({ target }, questionIndex, answerIndex) {
-            this.test[questionIndex].answers[answerIndex].isUpdated = true;
             const fileReader = new FileReader();
             fileReader.onload = () => {
                 const base64 = fileReader.result;
@@ -289,11 +245,9 @@ export default {
             fileReader.readAsDataURL(target.files[0]);
         },
         setAnswerTitle({ target }, questionIndex, answerIndex) {
-            this.test[questionIndex].answers[answerIndex].isUpdated = true;
             this.test[questionIndex].answers[answerIndex].title = target.value;
         },
         setAnswerRight({ target }, questionIndex, answerIndex) {
-            this.test[questionIndex].answers[answerIndex].isUpdated = true;
             const questionType = this.test[questionIndex].common;
             if (questionType) {
                 this.test[questionIndex].answers.forEach((a) => {
@@ -313,55 +267,52 @@ export default {
 
         save() {
             this.isLoading = true;
-            const questionPromises = [];
-            const answersPromises = [];
 
-            this.test.forEach((question) => {
-                console.log("QUESTION", question);
-                if (question.isUpdated) {
-                    const response = axios.post(
-                        `/api/question/${question.id}/update`,
-                        question
-                    );
-                    questionPromises.push(response);
-                }
-                question.answers.forEach((answer) => {
-                    if (answer.isUpdated) {
-                        const response = axios.post(
-                            `/api/answer/${answer.id}/update`,
-                            answer
-                        );
-                        answersPromises.push(response);
-                    }
-                });
-            });
-            const allResponses = [...questionPromises, ...answersPromises];
-            Promise.all(allResponses).then((response) => {
-                this.test.forEach((q) => {
-                    q.isUpdated = false;
-                });
-                console.log(response);
-            });
-
+            if (!this.isUpdate) {
+                axios
+                    .post(this.baseUrl + "/api/admin/test", {
+                        title: this.title,
+                        language: this.language,
+                        test: this.test,
+                        instruction: this.instruction,
+                    })
+                    .then((response) => {
+                        this.requestSuccess("create", response.data?.message);
+                    })
+                    .catch((e) => {
+                        this.requestFailure(e);
+                    });
+                return;
+            }
             axios
-                .post(`${this.baseUrl}/api/main/${this.id}`, {
+                .post(`${this.baseUrl}/api/admin/test/${this.id}`, {
                     title: this.title,
                     language: this.language,
-                    instruction: this.instruction,
+                    test: this.test,
                 })
                 .then((response) => {
-                    this.requestSuccess(response.data?.message);
+                    this.requestSuccess("update", response.data?.message);
                 })
                 .catch((e) => {
                     this.requestFailure(e);
                 });
         },
-        requestSuccess(message) {
+        requestSuccess(requestType, message) {
+            if (requestType === "update") {
+                this.isLoading = false;
+                this.successMessage = message || "Успешно";
+                setTimeout(() => {
+                    this.successMessage = "";
+                }, 3000);
+                return;
+            }
             this.isLoading = false;
             this.successMessage = message || "Успешно";
+            this.test = [];
+            this.title = "";
+            this.language = "ru";
             setTimeout(() => {
                 this.successMessage = "";
-                // window.location = `${this.baseUrl}/admin/regular-category-tests`;
             }, 3000);
         },
         requestFailure(e) {
