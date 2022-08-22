@@ -79,7 +79,7 @@ class NewTestController extends Controller
         if (isset($data['question'])) {
             $question->question = $data['question'];
         }
-        if (request()->has('type')) {
+        if (request()->has('common')) {
             $type           = $data['common'] ? 'common' : 'multiple_choice';
             $question->type = $type;
         }

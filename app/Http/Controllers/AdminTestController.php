@@ -17,7 +17,7 @@ class AdminTestController extends Controller
     {
         $test = RegularCategoryTest::query()
                                    ->where('id', $id)
-                                   ->select('id', 'title', 'language')
+                                   ->select('id', 'title', 'language', 'instruction')
                                    ->first()
         ;
 
