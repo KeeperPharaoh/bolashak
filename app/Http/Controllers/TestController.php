@@ -62,7 +62,7 @@ class TestController extends Controller
         return DescriptionTest::query()
                               ->select('title', 'description')
                               ->first()
-                              ->translate($language)
+                              ?->translate($language)
         ;
     }
 
