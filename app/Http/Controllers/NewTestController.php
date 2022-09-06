@@ -175,7 +175,7 @@ class NewTestController extends Controller
     protected function imageUpload($image, $path)
     {
         return Storage::disk('public')
-            ->put($path, $image)
+            ->putFile($path, $image)
         ;
     }
 }
