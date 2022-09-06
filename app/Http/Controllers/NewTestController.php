@@ -84,7 +84,7 @@ class NewTestController extends Controller
             $question->type = $type;
         }
         if (request()->has('image')) {
-            $question->image = $this->imageUpload(request()->get('image'), 'questions');
+            $question->image = $this->imageUpload(request()->file('image'), 'questions');
         }
         $question->save();
         if (isset($question['image'])) {
@@ -144,7 +144,7 @@ class NewTestController extends Controller
             $question->is_correct = $data['right'];
         }
         if (request()->has('image')) {
-            $question->image = $this->imageUpload(request()->get('image'), 'questions');
+            $question->image = $this->imageUpload(request()->file('image'), 'questions');
         }
 
         $question->save();
