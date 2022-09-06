@@ -84,7 +84,7 @@ class NewTestController extends Controller
             $question->type = $type;
         }
         if (request()->has('image')) {
-            $question->image = $this->imageUpload($data['image'], 'questions');
+            $question->image = $this->imageUpload(request()->get('image'), 'questions');
         }
         $question->save();
         if (isset($question['image'])) {
@@ -144,7 +144,7 @@ class NewTestController extends Controller
             $question->is_correct = $data['right'];
         }
         if (request()->has('image')) {
-            $question->image = $this->imageUpload($data['image'], 'questions');
+            $question->image = $this->imageUpload(request()->get('image'), 'questions');
         }
 
         $question->save();
@@ -174,33 +174,8 @@ class NewTestController extends Controller
 
     protected function imageUpload($image, $path)
     {
-        try {
-            preg_replace('/^data:image\/\w+;base64,/', '', $image);
-            $type = explode(';', $image)[0];
-            $type = explode('/', $type)[1]; // png or jpg etc
-
-            if (empty($type)) {
-                $pathR = env('APP_URL') . '/storage/';
-                $image = str_replace($pathR, '', $image);
-
-                return $image;
-            }
-
-            $image = str_replace('data:image/' . $type . ';base64,', '', $image);
-            $image = str_replace(' ', '+', $image);
-
-
-            $imageName = "p-" . time() . "." . $type;
-
-            Storage::disk('public')
-                   ->put($path . '/' . $imageName, base64_decode($image))
-            ;
-
-
-            return $path . '/' . $imageName;
-
-        } catch (\Exception $e) {
-            return null;
-        }
+        return Storage::disk('public')
+            ->put($path, $image)
+        ;
     }
 }
